@@ -11,8 +11,8 @@ This ROS package contains the navigation stack for our neurobot graduation proje
 Follow the steps below to install the package. It has been assumed that the ROS workspace folder name is `catkin_ws` and is present inside the home folder (`~/`). 
 ```
 cd ~/catkin_ws/src
-git clone https://github.com/Namelessu/Neurobot_Nav.git
-catkin build neurobot
+git clone https://github.com/namelessu/neurobot_nav.git
+catkin build neurobot_nav
 source ~/catkin_ws/devel/setup.bash
 ```
 
