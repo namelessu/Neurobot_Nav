@@ -1,0 +1,53 @@
+<launch>
+  <env name="GAZEBO_RESOURCE_PATH" value="$(find neurobot_nav)/meshes"/>
+
+  <!-- Arguments -->
+  <arg name="robot_name" value="neurobot_nav"/>
+  <arg name="model" default="$(find neurobot_nav)/urdf/neurobot/neurobot.urdf.xacro"/>
+  <arg name="cmd_vel" default="/neurobot_nav/mobile_base_controller/cmd_vel"/>
+  <arg name="world" default="small_house1"/>
+
+  <!-- Start Gazebo with an empty world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="use_sim_time" value="true"/>
+    <arg name="debug" value="false"/>
+    <arg name="verbose" value="false"/>
+    <arg name="world_name" value="$(find neurobot_nav)/worlds/$(arg world).world"/>
+  </include>
+
+  <!-- Set the robot description parameter before spawning the model -->
+  <param name="/neurobot_nav/robot_description" command="xacro $(arg model)"/>
+
+  <!-- Spawn Robot inside a Gazebo simulation -->
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_$(arg robot_name)" 
+        args="-x 0.0 -y 0.5 -z 0.1 -unpause -urdf -param /neurobot_nav/robot_description -model $(arg robot_name)" 
+        respawn="false" output="screen">
+  </node>
+
+  <!-- Load controller configuration -->
+  <rosparam command="load" file="$(find neurobot_nav)/config/manual_drive.yaml"/>
+
+  <!-- Spawn Controller inside a Gazebo simulation -->
+  <node name="neurobot_nav_controller_spawner" pkg="controller_manager" type="spawner"
+        ns="/neurobot_nav" args="joint_state_controller"/>
+  <!-- Uncomment the following line if you want to spawn multiple controllers -->
+  <!-- <node name="neurobot_nav_controller_spawner" pkg="controller_manager" type="spawner"
+        ns="/neurobot_nav" args="joint_state_controller mobile_base_controller"/> -->
+
+  <!-- Setup TF -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" ns="/neurobot_nav">
+    <param name="publish_frequency" type="double" value="30.0" />
+    <remap from="/joint_states" to="/neurobot_nav/joint_states"/>
+    <remap from="/robot_description" to="/neurobot_nav/robot_description" />
+  </node>
+
+  <!-- RViz -->
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find neurobot_nav)/rviz/neurobot_nav.rviz" />
+
+  <!-- Setup manual control through GUI -->
+  <param name="/cmd_vel" value="$(arg cmd_vel)"/>
+  <!-- Uncomment the following line if you want to use rqt_robot_steering -->
+  <!-- <node name="rqt_robot_steering" pkg="rqt_robot_steering" type="rqt_robot_steering">
+    <param name="default_topic" value="$(arg cmd_vel)"/>
+  </node> -->
+</launch>
